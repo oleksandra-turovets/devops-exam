@@ -40,8 +40,19 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.SPACES_SECRET_KEY }}
           TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
+          TF_VAR_spaces_access_key: ${{ secrets.SPACES_ACCESS_KEY }}
+          TF_VAR_spaces_secret_key: ${{ secrets.SPACES_SECRET_KEY }}
         run: terraform plan -detailed-exitcode
-        # -detailed-exitcode: зупиняє pipeline якщо план не вдалий
+
+      - name: Terraform Import VPC (if exists)
+        working-directory: ${{ env.TF_DIR }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SPACES_SECRET_KEY }}
+          TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
+          TF_VAR_spaces_access_key: ${{ secrets.SPACES_ACCESS_KEY }}
+          TF_VAR_spaces_secret_key: ${{ secrets.SPACES_SECRET_KEY }}
+        run: terraform import digitalocean_vpc.main 07b3173e-2024-4426-b053-051a7038e734 || true
 
       - name: Terraform Apply
         working-directory: ${{ env.TF_DIR }}
@@ -49,4 +60,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.SPACES_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.SPACES_SECRET_KEY }}
           TF_VAR_do_token: ${{ secrets.DO_TOKEN }}
+          TF_VAR_spaces_access_key: ${{ secrets.SPACES_ACCESS_KEY }}
+          TF_VAR_spaces_secret_key: ${{ secrets.SPACES_SECRET_KEY }}
         run: terraform apply -auto-approve

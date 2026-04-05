@@ -15,3 +15,15 @@ variable "region" {
   type        = string
   default     = "fra1"        # Frankfurt
 }
+
+variable "spaces_access_key" {
+  description = "Spaces Access Key"
+  type        = string
+  sensitive   = true
+}
+
+variable "spaces_secret_key" {
+  description = "Spaces Secret Key"
+  type        = string
+  sensitive   = true
+}
