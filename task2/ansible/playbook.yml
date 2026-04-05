@@ -18,10 +18,10 @@
 
     - name: Install Docker
       ansible.builtin.shell: |
-        set -o pipefail
         curl -fsSL https://get.docker.com | sh
       args:
         creates: /usr/bin/docker
+        executable: /bin/bash
 
     - name: Start Docker
       ansible.builtin.service:
@@ -51,10 +51,10 @@
 
     - name: Install Helm
       ansible.builtin.shell: |
-        set -o pipefail
         curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       args:
         creates: /usr/local/bin/helm
+        executable: /bin/bash
 
     - name: Install kubectl proxy service
       ansible.builtin.copy:
