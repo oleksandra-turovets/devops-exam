@@ -100,4 +100,3 @@
           - "{{ kubectl_check.stdout }}"
           - "{{ minikube_check.stdout }}"
           - "{{ helm_check.stdout }}"
-
