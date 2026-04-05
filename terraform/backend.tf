@@ -4,7 +4,7 @@ terraform {
       s3 = "https://fra1.digitaloceanspaces.com"
     }
 
-    bucket = "turovets-tfstate"  # твоя назва Space
+    bucket = "oturovets-tfstate"  # твоя назва Space
     key    = "terraform.tfstate"
     region = "us-east-1"
 
