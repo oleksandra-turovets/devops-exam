@@ -16,12 +16,17 @@
         state: present
         update_cache: true
 
+    - name: Download Docker install script
+      ansible.builtin.get_url:
+        url: https://get.docker.com
+        dest: /tmp/get-docker.sh
+        mode: '0755'
+
     - name: Install Docker
-      ansible.builtin.shell: |
-        curl -fsSL https://get.docker.com | sh
+      ansible.builtin.command: /bin/bash /tmp/get-docker.sh
       args:
         creates: /usr/bin/docker
-        executable: /bin/bash
+      changed_when: false
 
     - name: Start Docker
       ansible.builtin.service:
@@ -49,12 +54,17 @@
         HOME: /root
       changed_when: false
 
+    - name: Download Helm install script
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        dest: /tmp/get-helm.sh
+        mode: '0755'
+
     - name: Install Helm
-      ansible.builtin.shell: |
-        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      ansible.builtin.command: /bin/bash /tmp/get-helm.sh
       args:
         creates: /usr/local/bin/helm
-        executable: /bin/bash
+      changed_when: false
 
     - name: Install kubectl proxy service
       ansible.builtin.copy:
