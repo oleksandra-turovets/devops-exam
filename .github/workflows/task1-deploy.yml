@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  TF_DIR: ./terraform
+  TF_DIR: ./task1/terraform
 
 jobs:
   terraform:
