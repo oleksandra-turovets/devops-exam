@@ -1,0 +1,44 @@
+name: Task2 - Install K8s Components
+
+on:
+  workflow_dispatch:
+    inputs:
+      vm_ip:
+        description: 'VM IP address'
+        required: true
+        default: ''
+
+jobs:
+  ansible:
+    name: Install via Ansible
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ github.event.inputs.vm_ip }} >> ~/.ssh/known_hosts
+
+      - name: Ansible lint (перевірка без встановлення)
+        run: |
+          pip install ansible-lint
+          ansible-lint task2/ansible/playbook.yml || true
+
+      - name: Run Ansible playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          ansible-playbook task2/ansible/playbook.yml \
+            -i "${{ github.event.inputs.vm_ip }}," \
+            --user root \
+            --private-key ~/.ssh/id_rsa

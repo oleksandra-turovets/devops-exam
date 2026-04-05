@@ -1,0 +1,103 @@
+---
+- name: Install Kubernetes, Minikube, Helm
+  hosts: nodes
+  become: true
+
+  tasks:
+    # ── Залежності ──────────────────────────────────
+    - name: Install dependencies
+      apt:
+        name:
+          - curl
+          - apt-transport-https
+          - ca-certificates
+          - gnupg
+          - conntrack
+          - socat
+        state: present
+        update_cache: yes
+
+    # ── Docker ──────────────────────────────────────
+    - name: Install Docker
+      shell: |
+        curl -fsSL https://get.docker.com | sh
+      args:
+        creates: /usr/bin/docker
+
+    - name: Start Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    # ── kubectl ─────────────────────────────────────
+    - name: Install kubectl
+      shell: |
+        curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        mv kubectl /usr/local/bin/kubectl
+      args:
+        creates: /usr/local/bin/kubectl
+
+    # ── Minikube ────────────────────────────────────
+    - name: Install Minikube
+      shell: |
+        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        install minikube-linux-amd64 /usr/local/bin/minikube
+      args:
+        creates: /usr/local/bin/minikube
+
+    - name: Start Minikube
+      shell: minikube start --driver=docker --force
+      environment:
+        HOME: /root
+
+    # ── Helm ────────────────────────────────────────
+    - name: Install Helm
+      shell: |
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      args:
+        creates: /usr/local/bin/helm
+
+    # ── Proxy для доступу до Minikube ───────────────
+    - name: Install kubectl proxy service
+      copy:
+        dest: /etc/systemd/system/kubectl-proxy.service
+        content: |
+          [Unit]
+          Description=Kubectl Proxy
+          After=network.target
+
+          [Service]
+          ExecStart=/usr/local/bin/kubectl proxy --port=8001 --address=0.0.0.0 --accept-hosts=.*
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Start kubectl proxy
+      systemd:
+        name: kubectl-proxy
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+    # ── Перевірка встановлення ──────────────────────
+    - name: Verify kubectl
+      command: kubectl version --client
+      register: kubectl_check
+
+    - name: Verify Minikube
+      command: minikube version
+      register: minikube_check
+
+    - name: Verify Helm
+      command: helm version
+      register: helm_check
+
+    - name: Print versions
+      debug:
+        msg:
+          - "{{ kubectl_check.stdout }}"
+          - "{{ minikube_check.stdout }}"
+          - "{{ helm_check.stdout }}"
