@@ -1,12 +1,11 @@
 ---
 - name: Install Kubernetes, Minikube, Helm
-  hosts: nodes
+  hosts: all
   become: true
 
   tasks:
-    # ── Залежності ──────────────────────────────────
     - name: Install dependencies
-      apt:
+      ansible.builtin.apt:
         name:
           - curl
           - apt-transport-https
@@ -15,54 +14,51 @@
           - conntrack
           - socat
         state: present
-        update_cache: yes
+        update_cache: true
 
-    # ── Docker ──────────────────────────────────────
     - name: Install Docker
-      shell: |
+      ansible.builtin.shell: |
+        set -o pipefail
         curl -fsSL https://get.docker.com | sh
       args:
         creates: /usr/bin/docker
 
     - name: Start Docker
-      service:
+      ansible.builtin.service:
         name: docker
         state: started
-        enabled: yes
+        enabled: true
 
-    # ── kubectl ─────────────────────────────────────
-    - name: Install kubectl
-      shell: |
-        curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        chmod +x kubectl
-        mv kubectl /usr/local/bin/kubectl
-      args:
-        creates: /usr/local/bin/kubectl
+    - name: Download kubectl
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/v1.29.0/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
 
-    # ── Minikube ────────────────────────────────────
-    - name: Install Minikube
-      shell: |
-        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-        install minikube-linux-amd64 /usr/local/bin/minikube
-      args:
-        creates: /usr/local/bin/minikube
+    - name: Download Minikube
+      ansible.builtin.get_url:
+        url: "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"
+        dest: /usr/local/bin/minikube
+        mode: '0755'
 
     - name: Start Minikube
-      shell: minikube start --driver=docker --force
+      ansible.builtin.shell: minikube start --driver=docker --force
+      args:
+        creates: /root/.minikube
       environment:
         HOME: /root
 
-    # ── Helm ────────────────────────────────────────
     - name: Install Helm
-      shell: |
+      ansible.builtin.shell: |
+        set -o pipefail
         curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
       args:
         creates: /usr/local/bin/helm
 
-    # ── Proxy для доступу до Minikube ───────────────
     - name: Install kubectl proxy service
-      copy:
+      ansible.builtin.copy:
         dest: /etc/systemd/system/kubectl-proxy.service
+        mode: '0644'
         content: |
           [Unit]
           Description=Kubectl Proxy
@@ -76,27 +72,29 @@
           WantedBy=multi-user.target
 
     - name: Start kubectl proxy
-      systemd:
+      ansible.builtin.systemd:
         name: kubectl-proxy
         state: started
-        enabled: yes
-        daemon_reload: yes
+        enabled: true
+        daemon_reload: true
 
-    # ── Перевірка встановлення ──────────────────────
     - name: Verify kubectl
-      command: kubectl version --client
+      ansible.builtin.command: kubectl version --client
       register: kubectl_check
+      changed_when: false
 
     - name: Verify Minikube
-      command: minikube version
+      ansible.builtin.command: minikube version
       register: minikube_check
+      changed_when: false
 
     - name: Verify Helm
-      command: helm version
+      ansible.builtin.command: helm version
       register: helm_check
+      changed_when: false
 
     - name: Print versions
-      debug:
+      ansible.builtin.debug:
         msg:
           - "{{ kubectl_check.stdout }}"
           - "{{ minikube_check.stdout }}"

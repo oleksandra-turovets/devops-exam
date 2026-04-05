@@ -6,7 +6,7 @@ on:
       vm_ip:
         description: 'VM IP address'
         required: true
-        default: ''
+        default: '207.154.227.207'
 
 jobs:
   ansible:
@@ -29,10 +29,11 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ github.event.inputs.vm_ip }} >> ~/.ssh/known_hosts
 
-      - name: Ansible lint (перевірка без встановлення)
+      - name: Ansible lint
         run: |
           pip install ansible-lint
-          ansible-lint task2/ansible/playbook.yml || true
+          ansible-lint task2/ansible/playbook.yml
+        continue-on-error: false
 
       - name: Run Ansible playbook
         env:
