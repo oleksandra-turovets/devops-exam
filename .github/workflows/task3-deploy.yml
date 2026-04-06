@@ -109,8 +109,7 @@ jobs:
       - name: Deploy via Helm on VM
         run: |
           ssh root@${{ github.event.inputs.vm_ip }} \
-            "kubectl create namespace ${{ steps.vars.outputs.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f - && \
-            helm upgrade --install myapp-${{ steps.vars.outputs.NAMESPACE }} \
+            "helm upgrade --install myapp-${{ steps.vars.outputs.NAMESPACE }} \
             /root/helm/myapp \
             --namespace ${{ steps.vars.outputs.NAMESPACE }} \
             --create-namespace \
