@@ -101,6 +101,11 @@ jobs:
             echo "HOST_PORT=8003" >> $GITHUB_OUTPUT
           fi
 
+      - name: Start Minikube on VM
+        run: |
+          ssh root@${{ github.event.inputs.vm_ip }} \
+            "minikube start --driver=docker --force"
+
       - name: Deploy via Helm on VM
         run: |
           ssh root@${{ github.event.inputs.vm_ip }} \
